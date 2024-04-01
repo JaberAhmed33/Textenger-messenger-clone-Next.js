@@ -1,65 +1,69 @@
-import getCurrentUser from "@/app/actions/getCurrentUser";
-import { NextResponse } from "next/server";
-import prisma from "@/app/libs/prismadb";
-import { pusherServer } from "@/app/libs/pusher";
 
-export async function POST(request: Request) {
+import { NextResponse } from "next/server";
+
+import getCurrentUser from "@/app/actions/getCurrentUser";
+import { pusherServer } from '@/app/libs/pusher'
+import prisma from "@/app/libs/prismadb";
+
+export async function POST(
+  request: Request,
+) {
   try {
     const currentUser = await getCurrentUser();
-    const { message, image, conversationId } = await request.json();
+    const body = await request.json();
+    const {
+      message,
+      image,
+      conversationId
+    } = body;
 
-    if (!currentUser?.id || !currentUser.email) {
-      return new NextResponse("Unauthorized", {
-        status: 401,
-      });
+    if (!currentUser?.id || !currentUser?.email) {
+      return new NextResponse('Unauthorized', { status: 401 });
     }
 
     const newMessage = await prisma.message.create({
+      include: {
+        seen: true,
+        sender: true
+      },
       data: {
         body: message,
-        image,
+        image: image,
         conversation: {
-          connect: {
-            id: conversationId,
-          },
+          connect: { id: conversationId }
         },
         sender: {
-          connect: {
-            id: currentUser.id,
-          },
+          connect: { id: currentUser.id }
         },
         seen: {
           connect: {
-            id: currentUser.id,
-          },
+            id: currentUser.id
+          }
         },
-      },
-      include: {
-        seen: true,
-        sender: true,
-      },
+      }
     });
 
+    
     const updatedConversation = await prisma.conversation.update({
       where: {
-        id: conversationId,
+        id: conversationId
       },
       data: {
         lastMessageAt: new Date(),
         messages: {
           connect: {
-            id: newMessage.id,
-          },
-        },
+            id: newMessage.id
+          }
+        }
       },
       include: {
         users: true,
         messages: {
           include: {
-            seen: true,
-          },
-        },
-      },
+            seen: true
+          }
+        }
+      }
     });
 
     await pusherServer.trigger(conversationId, 'messages:new', newMessage);
@@ -69,15 +73,13 @@ export async function POST(request: Request) {
     updatedConversation.users.map((user) => {
       pusherServer.trigger(user.email!, 'conversation:update', {
         id: conversationId,
-        messages: [lastMessage],
-      })
-    })
-
-    return NextResponse.json({msg: "done!", status: 201, newMessage});
-  } catch (error: any) {
-    console.log("Error from messages route", error);
-    return new NextResponse("Internal Error in messages control", {
-      status: 500,
+        messages: [lastMessage]
+      });
     });
+
+    return NextResponse.json(newMessage)
+  } catch (error) {
+    console.log(error, 'ERROR_MESSAGES')
+    return new NextResponse('Error', { status: 500 });
   }
 }
