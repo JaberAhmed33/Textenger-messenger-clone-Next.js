@@ -1,5 +1,6 @@
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import { NextResponse } from "next/server";
+
 import prisma from "@/app/libs/prismadb";
 import { pusherServer } from "@/app/libs/pusher";
 
@@ -16,46 +17,39 @@ export async function DELETE(
     const currentUser = await getCurrentUser();
 
     if (!currentUser?.id) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return NextResponse.json(null);
     }
 
     const existingConversation = await prisma.conversation.findUnique({
       where: {
-        id: conversationId,
+        id: conversationId
       },
       include: {
-        users: true,
-      },
+        users: true
+      }
     });
 
     if (!existingConversation) {
-      return new NextResponse("Invalid ID", { status: 400 });
+      return new NextResponse('Invalid ID', { status: 400 });
     }
 
     const deletedConversation = await prisma.conversation.deleteMany({
       where: {
         id: conversationId,
         userIds: {
-          hasSome: [currentUser.id],
+          hasSome: [currentUser.id]
         },
       },
     });
 
     existingConversation.users.forEach((user) => {
       if (user.email) {
-        pusherServer.trigger(user.email, 'conversation:delete', existingConversation);
+        pusherServer.trigger(user.email, 'conversation:remove', existingConversation);
       }
-    })
+    });
 
-    return NextResponse.json({
-      msg: "done!",
-      status: 200,
-      deletedConversation,
-    });
-  } catch (error: any) {
-    console.log("delete conversation control", error);
-    return new NextResponse("Internal Error in delete conversation control", {
-      status: 500,
-    });
+    return NextResponse.json(deletedConversation)
+  } catch (error) {
+    return NextResponse.json(null);
   }
 }

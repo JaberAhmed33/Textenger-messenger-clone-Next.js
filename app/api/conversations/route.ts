@@ -1,20 +1,28 @@
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import { NextResponse } from "next/server";
+
 import prisma from "@/app/libs/prismadb";
 import { pusherServer } from "@/app/libs/pusher";
 
-export async function POST(request: Request) {
+export async function POST(
+  request: Request,
+) {
   try {
     const currentUser = await getCurrentUser();
     const body = await request.json();
-    const { userId, isGroup, members, name } = body;
+    const {
+      userId,
+      isGroup,
+      members,
+      name
+    } = body;
 
-    if (!currentUser?.id || !currentUser.email) {
-      return new NextResponse("Unauthorized", { status: 401 });
+    if (!currentUser?.id || !currentUser?.email) {
+      return new NextResponse('Unauthorized', { status: 400 });
     }
 
     if (isGroup && (!members || members.length < 2 || !name)) {
-      return new NextResponse("Invalid data, must have a more than one user and group name.", { status: 400 });
+      return new NextResponse('Invalid data', { status: 400 });
     }
 
     if (isGroup) {
@@ -24,31 +32,28 @@ export async function POST(request: Request) {
           isGroup,
           users: {
             connect: [
-              ...members.map((member: { value: string }) => ({
-                id: member.value,
+              ...members.map((member: { value: string }) => ({  
+                id: member.value 
               })),
               {
-                id: currentUser.id,
-              },
-            ],
-          },
+                id: currentUser.id
+              }
+            ]
+          }
         },
         include: {
           users: true,
-        },
+        }
       });
 
-      newConversation.users.forEach(user => {
-        if(user.email){
+       // Update all connections with new conversation
+      newConversation.users.forEach((user) => {
+        if (user.email) {
           pusherServer.trigger(user.email, 'conversation:new', newConversation);
         }
       });
 
-      return NextResponse.json({
-        msg: "groupe done!",
-        status: 201,
-        conversation: newConversation,
-      });
+      return NextResponse.json(newConversation);
     }
 
     const existingConversations = await prisma.conversation.findMany({
@@ -56,24 +61,22 @@ export async function POST(request: Request) {
         OR: [
           {
             userIds: {
-              equals: [currentUser.id, userId],
-            },
+              equals: [currentUser.id, userId]
+            }
           },
           {
             userIds: {
-              equals: [userId, currentUser.id],
-            },
-          },
-        ],
-      },
+              equals: [userId, currentUser.id]
+            }
+          }
+        ]
+      }
     });
 
-    if (existingConversations[0]) {
-      return NextResponse.json({
-        msg: "done!",
-        status: 200,
-        conversation: existingConversations[0],
-      });
+    const singleConversation = existingConversations[0];
+
+    if (singleConversation) {
+      return NextResponse.json(singleConversation);
     }
 
     const newConversation = await prisma.conversation.create({
@@ -81,30 +84,28 @@ export async function POST(request: Request) {
         users: {
           connect: [
             {
-              id: currentUser.id,
+              id: currentUser.id
             },
             {
-              id: userId,
-            },
-          ],
-        },
+              id: userId
+            }
+          ]
+        }
       },
       include: {
         users: true
       }
     });
 
-    newConversation.users.forEach(user => {
-      if(user.email){
+    // Update all connections with new conversation
+    newConversation.users.map((user) => {
+      if (user.email) {
         pusherServer.trigger(user.email, 'conversation:new', newConversation);
       }
     });
 
-    return NextResponse.json({msg: "single done!", status: 201, conversation: newConversation})
-
-  } catch (error: any) {
-    return new NextResponse("Internal Error in conversation control", {
-      status: 500,
-    });
+    return NextResponse.json(newConversation)
+  } catch (error) {
+    return new NextResponse('Internal Error', { status: 500 });
   }
 }
