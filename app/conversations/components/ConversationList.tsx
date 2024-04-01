@@ -10,7 +10,7 @@ import ConversationBox from "./ConversationBox";
 import GroupChatModal from "./GroupChatModal";
 import { User } from "@prisma/client";
 import { useSession } from "next-auth/react";
-import { pusherClient } from "@/app/libs/pusher";
+// import { pusherClient } from "@/app/libs/pusher";
 import { find } from "lodash";
 
 interface ConversationListProps {
@@ -29,63 +29,63 @@ const ConversationList: React.FC<ConversationListProps> = ({
   const router = useRouter();
   const { isOpen, conversationId } = useConversation();
 
-  const pusherKey = useMemo(() => {
-    return session.data?.user?.email;
-  }, [session.data?.user?.email]);
+  // const pusherKey = useMemo(() => {
+  //   return session.data?.user?.email;
+  // }, [session.data?.user?.email]);
 
-  useEffect(() => {
-    if (!pusherKey) {
-      return
-    }
+  // useEffect(() => {
+  //   if (!pusherKey) {
+  //     return
+  //   }
 
-    pusherClient.subscribe(pusherKey);
+  //   pusherClient.subscribe(pusherKey);
 
-    const newHandler = (conversation: FullConversationType) => {
-      setConversations((prev) => {
-        if (find(prev, {id: conversation.id})) {
-          return prev;
-        }
+  //   const newHandler = (conversation: FullConversationType) => {
+  //     setConversations((prev) => {
+  //       if (find(prev, {id: conversation.id})) {
+  //         return prev;
+  //       }
 
-        return [...prev, conversation]
-      })
-    }   
+  //       return [...prev, conversation]
+  //     })
+  //   }   
     
-    const updateHandler = (conversation: FullConversationType) => {
+  //   const updateHandler = (conversation: FullConversationType) => {
       
-      setConversations((prev) => prev.map((prevConversation) => {
-        if (prevConversation.id === conversation.id) {
-          return {...prevConversation, messages: conversation.messages};
-        }
+  //     setConversations((prev) => prev.map((prevConversation) => {
+  //       if (prevConversation.id === conversation.id) {
+  //         return {...prevConversation, messages: conversation.messages};
+  //       }
 
-        return prevConversation;
-      }))
-    }
+  //       return prevConversation;
+  //     }))
+  //   }
 
-    const deleteHandler = (conversation: FullConversationType) => {
+  //   const deleteHandler = (conversation: FullConversationType) => {
       
-      setConversations((prev) => prev.filter((prevConversation) => {
-        if (prevConversation.id !== conversation.id) {
-          return prevConversation;
-        }
-      }))
+  //     setConversations((prev) => prev.filter((prevConversation) => {
+  //       if (prevConversation.id !== conversation.id) {
+  //         return prevConversation;
+  //       }
+  //     }))
 
-      if (conversation.id === conversationId) {
-        router.push('/conversations');
-      }
+  //     if (conversation.id === conversationId) {
+  //       router.push('/conversations');
+  //     }
 
-    }
+  //   }
 
-    pusherClient.bind("conversation:new", newHandler)
-    pusherClient.bind("conversation:update", updateHandler)
-    pusherClient.bind("conversation:delete", deleteHandler)
+  //   pusherClient.bind("conversation:new", newHandler)
+  //   pusherClient.bind("conversation:update", updateHandler)
+  //   pusherClient.bind("conversation:delete", deleteHandler)
 
-    return () => {
-      pusherClient.unsubscribe(pusherKey);
-      pusherClient.unbind("conversation:new", newHandler)
-      pusherClient.unbind("conversation:update", updateHandler)
-      pusherClient.unbind("conversation:delete", deleteHandler)
-    }
-  }, [pusherKey, conversationId, router])
+  //   return () => {
+  //     pusherClient.unsubscribe(pusherKey);
+  //     pusherClient.unbind("conversation:new", newHandler)
+  //     pusherClient.unbind("conversation:update", updateHandler)
+  //     pusherClient.unbind("conversation:delete", deleteHandler)
+  //   }
+  // }, [pusherKey, conversationId, router])
   
 
   return (
