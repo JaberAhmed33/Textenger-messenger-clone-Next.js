@@ -104,7 +104,7 @@ export default function AuthForm() {
           toast.success("Logged in!");
         }
       })
-      // .finally(() => setIsLoading(false));
+      .finally(() => setIsLoading(false));
   };
 
   return (
