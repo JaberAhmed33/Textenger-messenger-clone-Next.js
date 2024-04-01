@@ -10,7 +10,6 @@ export default async function UsersLayout({
   const users = await getUsers();
 
   return (
-    /* @ts-expect-error Async Server Component */
     <Sidebar>
       <div className="h-full">
         <UserList users={users} />
