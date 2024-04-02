@@ -39,8 +39,11 @@ const ConversationList: React.FC<ConversationListProps> = ({
     }
 
     pusherClient.subscribe(pusherKey);
-
+    
+    
     const newHandler = (conversation: FullConversationType) => {
+      
+      console.log("hi new");
       setConversations((prev) => {
         if (find(prev, {id: conversation.id})) {
           return prev;
@@ -51,7 +54,8 @@ const ConversationList: React.FC<ConversationListProps> = ({
     }   
     
     const updateHandler = (conversation: FullConversationType) => {
-      
+      console.log("hi update");
+
       setConversations((prev) => prev.map((prevConversation) => {
         if (prevConversation.id === conversation.id) {
           return {...prevConversation, messages: conversation.messages};
@@ -62,7 +66,8 @@ const ConversationList: React.FC<ConversationListProps> = ({
     }
 
     const deleteHandler = (conversation: FullConversationType) => {
-      
+      console.log("hi delete");
+
       setConversations((prev) => prev.filter((prevConversation) => {
         if (prevConversation.id !== conversation.id) {
           return prevConversation;

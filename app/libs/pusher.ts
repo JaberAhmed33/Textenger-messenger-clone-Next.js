@@ -13,6 +13,5 @@ export const pusherClient = new PusherClint(
     process.env.NEXT_PUBLIC_PUSHER_APP_KEY!,
     {
         cluster: 'eu',
-        authEndpoint: '/pusher/auth',
     }
 )
