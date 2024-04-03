@@ -65,6 +65,8 @@ const ConversationList: React.FC<ConversationListProps> = ({
 
     const deleteHandler = (conversation: FullConversationType) => {
 
+      console.log("hi delete");
+      
       setConversations((prev) => prev.filter((prevConversation) => {
         if (prevConversation.id !== conversation.id) {
           return prevConversation;
