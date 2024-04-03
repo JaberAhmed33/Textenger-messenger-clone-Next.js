@@ -21,7 +21,7 @@ export default async function handler(
       user_id: session.user.email,
     };
 
-    const auth = pusherServer.authenticate(socketId, channel, presenceData);
+    const auth = pusherServer.authorizeChannel(socketId, channel, presenceData);
     res.send(auth);
   } catch (error) {
     console.error("Error in Pusher auth API:", error);
