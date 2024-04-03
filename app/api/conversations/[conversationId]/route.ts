@@ -42,6 +42,28 @@ export async function DELETE(
       },
     });
 
+        // Update all users that had the deleted conversation
+  
+
+    for (const user of existingConversation.users) {
+
+      await prisma.user.update({
+        where: {
+          id: user.id
+        },
+        data: {
+          conversations: {
+            disconnect: {
+              id: conversationId
+            }
+          },
+          conversationIds: {
+            set: user.conversationIds.filter(id => id !== conversationId)
+          }
+        }
+      });
+    }
+
     existingConversation.users.forEach((user) => {
       if (user.email) {
         pusherServer.trigger(user.email, 'conversation:delete', existingConversation);
