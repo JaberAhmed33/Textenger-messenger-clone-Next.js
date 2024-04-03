@@ -2,7 +2,7 @@
 
 import { FullConversationType } from "@/app/types";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useState } from "react";
 import useConversation from "./../../hooks/useConversation";
 import clsx from "clsx";
 import { MdOutlineGroupAdd } from "react-icons/md";
@@ -33,7 +33,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
     return session.data?.user?.email;
   }, [session.data?.user?.email]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!pusherKey) {
       return
     }
