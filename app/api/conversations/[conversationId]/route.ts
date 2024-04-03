@@ -62,13 +62,17 @@ export async function DELETE(
           }
         }
       });
-    }
 
-    existingConversation.users.forEach((user) => {
       if (user.email) {
         pusherServer.trigger(user.email, 'conversation:delete', existingConversation);
       }
-    });
+    }
+
+    // existingConversation.users.forEach((user) => {
+    //   if (user.email) {
+    //     pusherServer.trigger(user.email, 'conversation:delete', existingConversation);
+    //   }
+    // });
 
     return NextResponse.json(deletedConversation)
   } catch (error) {
